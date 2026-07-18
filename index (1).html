@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>VMM Collection — Haute Couture, Hathras</title>
+<meta name="description" content="VMM Collection — a curated fashion boutique in Hathras. Shop premium menswear, womenswear and accessories, order directly on WhatsApp." />
+
+<!-- Tailwind CSS (CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          velvet: '#0A0A0A',
+          charcoal: '#121212',
+          ivory: '#FAF9F6',
+          gold: '#D4AF37',
+          goldsoft: '#8a7326'
+        },
+        fontFamily: {
+          display: ['"Cormorant Garamond"', 'serif'],
+          body: ['"Jost"', 'Arial', 'sans-serif']
+        },
+        letterSpacing: {
+          widest2: '0.35em'
+        }
+      }
+    }
+  };
+</script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+  :root{
+    --color-velvet:#0A0A0A;
+    --color-charcoal:#121212;
+    --color-ivory:#FAF9F6;
+    --color-gold:#D4AF37;
+    --color-gold-soft:rgba(212,175,55,0.35);
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--color-velvet);
+    color:var(--color-ivory);
+    font-family:'Jost', Arial, sans-serif;
+    line-height:1.25;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--color-gold); color:#0A0A0A; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar{ width:6px; height:6px; }
+  ::-webkit-scrollbar-track{ background:var(--color-velvet); }
+  ::-webkit-scrollbar-thumb{ background:var(--color-gold-soft); border-radius:4px; }
+
+  .font-display{ font-family:'Cormorant Garamond', serif; }
+  .tracking-widest2{ letter-spacing:0.35em; }
+  .gold-text{ color:var(--color-gold); }
+  .gold-line{ height:1px; background:linear-gradient(90deg, transparent, var(--color-gold), transparent); }
+
+  /* signature seal */
+  .seal{
+    border:1px solid var(--color-gold-soft);
+    box-shadow: inset 0 0 0 1px rgba(212,175,55,0.12);
+  }
+
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .snap-x-mandatory{ scroll-snap-type:x mandatory; }
+  .snap-center{ scroll-snap-align:center; }
+
+  /* fade/slide utility animations */
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(18px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .animate-fadeUp{ animation:fadeUp 0.7s cubic-bezier(.2,.7,.2,1) both; }
+
+  @keyframes fadeIn{
+    from{ opacity:0; } to{ opacity:1; }
+  }
+  .animate-fadeIn{ animation:fadeIn 0.4s ease both; }
+
+  @keyframes kenburns{
+    0%{ transform:scale(1.06) translate(0,0); }
+    100%{ transform:scale(1.14) translate(-1%,-1%); }
+  }
+  .animate-kenburns{ animation:kenburns 16s ease-in-out infinite alternate; }
+
+  @keyframes pulseBadge{
+    0%,100%{ transform:scale(1); } 50%{ transform:scale(1.18); }
+  }
+  .badge-pulse{ animation:pulseBadge 0.4s ease; }
+
+  @keyframes marquee{
+    from{ transform:translateX(0); } to{ transform:translateX(-50%); }
+  }
+  .animate-marquee{ animation:marquee 26s linear infinite; }
+
+  .drawer-panel{
+    transform:translateX(100%);
+    transition:transform 0.45s cubic-bezier(.2,.8,.2,1);
+  }
+  .drawer-panel.open{ transform:translateX(0); }
+  .drawer-overlay{
+    opacity:0; pointer-events:none;
+    transition:opacity 0.35s ease;
+  }
+  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
+
+  .modal-overlay{ opacity:0; pointer-events:none; transition:opacity .3s ease; }
+  .modal-overlay.open{ opacity:1; pointer-events:auto; }
+  .modal-card{ transform:translateY(24px) scale(.98); opacity:0; transition:all .35s cubic-bezier(.2,.8,.2,1); }
+  .modal-overlay.open .modal-card{ transform:translateY(0) scale(1); opacity:1; }
+
+  .cat-pill{
+    border:1px solid rgba(250,249,246,0.16);
+    transition:all .25s ease;
+  }
+  .cat-pill.active{
+    background:var(--color-gold);
+    color:#0A0A0A;
+    border-color:var(--color-gold);
+  }
+  .cat-pill:not(.active):hover{
+    border-color:var(--color-gold-soft);
+    color:var(--color-gold);
+  }
+
+  .product-card{ transition:transform .45s cubic-bezier(.2,.8,.2,1); }
+  .product-card:hover{ transform:translateY(-6px); }
+  .product-card .card-img{ transition:transform .8s ease; }
+  .product-card:hover .card-img{ transform:scale(1.07); }
+
+  .btn-gold{
+    background:var(--color-gold);
+    color:#0A0A0A;
+    transition:all .25s ease;
+    letter-spacing:0.08em;
+  }
+  .btn-gold:hover{ background:#e6c65c; box-shadow:0 8px 24px -8px rgba(212,175,55,0.55); }
+  .btn-gold:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+
+  .btn-outline{
+    border:1px solid var(--color-gold-soft);
+    color:var(--color-ivory);
+    transition:all .25s ease;
+  }
+  .btn-outline:hover{ border-color:var(--color-gold); color:var(--color-gold); }
+
+  .input-luxe{
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(250,249,246,0.14);
+    color:var(--color-ivory);
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .input-luxe:focus{ outline:none; border-color:var(--color-gold); background:rgba(255,255,255,0.05); }
+  .input-luxe::placeholder{ color:rgba(250,249,246,0.35); }
+
+  .tab-btn{ position:relative; }
+  .tab-btn.active{ color:var(--color-gold); }
+  .tab-btn.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--color-gold);
+  }
+
+  .size-chip{
+    border:1px solid rgba(250,249,246,0.2); transition:all .2s ease;
+  }
+  .size-chip.active{ background:var(--color-gold); border-color:var(--color-gold); color:#0A0A0A; }
+  .size-chip:not(.active):hover{ border-color:var(--color-gold); }
+
+  .lazy-img{ background:linear-gradient(110deg, #121212 8%, #1c1c1c 18%, #121212 33%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+  @keyframes shimmer{ to{ background-position-x: -200%; } }
+
+  .navlink{ position:relative; }
+  .navlink::after{
+    content:''; position:absolute; left:0; bottom:-4px; width:0; height:1px; background:var(--color-gold);
+    transition:width .25s ease;
+  }
+  .navlink:hover::after, .navlink.active::after{ width:100%; }
+
+  .toast{
+    animation: toastIn .35s cubic-bezier(.2,.8,.2,1) both, toastOut .35s ease 2.4s forwards;
+  }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes toastOut{ to{ opacity:0; transform:translateY(-8px);} }
+
+  @media (max-width: 767px){
+    .hero-title{ font-size: 3.1rem !important; }
+  }
+</style>
+</head>
+<body class="bg-velvet text-ivory font-body">
+
+<div id="app">
+  <!-- NAVBAR -->
+  <header id="navbar" class="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-velvet/80 border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 flex items-center justify-between h-[72px]">
+      <button data-nav="home" class="nav-link flex flex-col items-start leading-none group">
+        <span class="font-display text-2xl md:text-[26px] tracking-widest2 text-ivory group-hover:text-gold transition-colors">VMM</span>
+        <span class="text-[9px] md:text-[10px] tracking-[0.45em] gold-text -mt-0.5">COLLECTION</span>
+      </button>
+
+      <nav class="hidden md:flex items-center gap-10 text-[13px] tracking-[0.12em] uppercase">
+        <button data-nav="home" class="navlink text-ivory/85 hover:text-gold transition-colors">Home</button>
+        <button data-nav="shop" class="navlink text-ivory/85 hover:text-gold transition-colors">Shop</button>
+        <button data-nav="shop" data-cat="Men" class="navlink text-ivory/85 hover:text-gold transition-colors">Men</button>
+        <button data-nav="shop" data-cat="Women" class="navlink text-ivory/85 hover:text-gold transition-colors">Women</button>
+        <button data-nav="shop" data-cat="Accessories" class="navlink text-ivory/85 hover:text-gold transition-colors">Accessories</button>
+        <button data-nav="about" class="navlink text-ivory/85 hover:text-gold transition-colors">About</button>
+      </nav>
+
+      <div class="flex items-center gap-4 md:gap-5">
+        <button id="wishlist-btn" class="relative p-1.5 text-ivory/85 hover:text-gold transition-colors" title="Wishlist">
+          <i data-lucide="heart" class="w-[19px] h-[19px]"></i>
+          <span id="wishlist-badge" class="hidden absolute -top-1.5 -right-1.5 bg-gold text-velvet text-[10px] font-semibold w-4 h-4 rounded-full items-center justify-center">0</span>
+        </button>
+        <button id="cart-btn" class="relative p-1.5 text-ivory/85 hover:text-gold transition-colors" title="Bag">
+          <i data-lucide="shopping-bag" class="w-[19px] h-[19px]"></i>
+          <span id="cart-badge" class="hidden absolute -top-1.5 -right-1.5 bg-gold text-velvet text-[10px] font-semibold w-4 h-4 rounded-full items-center justify-center">0</span>
+        </button>
+        <button id="hamburger-btn" class="md:hidden p-1.5 text-ivory/90">
+          <i data-lucide="menu" class="w-[22px] h-[22px]"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-velvet/95 px-6 py-5 flex flex-col gap-4 text-sm tracking-[0.12em] uppercase">
+      <button data-nav="home" class="text-left text-ivory/85 hover:text-gold py-1">Home</button>
+      <button data-nav="shop" class="text-left text-ivory/85 hover:text-gold py-1">Shop All</button>
+      <button data-nav="shop" data-cat="Men" class="text-left text-ivory/85 hover:text-gold py-1">Men</button>
+      <button data-nav="shop" data-cat="Women" class="text-left text-ivory/85 hover:text-gold py-1">Women</button>
+      <button data-nav="shop" data-cat="Accessories" class="text-left text-ivory/85 hover:text-gold py-1">Accessories</button>
+      <button data-nav="about" class="text-left text-ivory/85 hover:text-gold py-1">About</button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEW -->
+  <main id="app-view" class="pt-[72px] min-h-screen"></main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 mt-24">
+    <div class="max-w-7xl mx-auto px-6 md:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+      <div>
+        <div class="font-display text-2xl tracking-widest2">VMM</div>
+        <div class="text-[10px] tracking-[0.4em] gold-text mt-0.5">COLLECTION</div>
+        <p class="text-ivory/50 text-sm mt-4 max-w-xs">A curated fashion boutique in Hathras, Uttar Pradesh — apparel, footwear and accessories, one fixed price at a time.</p>
+      </div>
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase gold-text mb-4">Shop</div>
+        <ul class="space-y-2.5 text-sm text-ivory/60">
+          <li><button data-nav="shop" data-cat="All" class="hover:text-gold transition-colors">All Products</button></li>
+          <li><button data-nav="shop" data-cat="Men" class="hover:text-gold transition-colors">Men</button></li>
+          <li><button data-nav="shop" data-cat="Women" class="hover:text-gold transition-colors">Women</button></li>
+          <li><button data-nav="shop" data-cat="Accessories" class="hover:text-gold transition-colors">Accessories</button></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase gold-text mb-4">Boutique</div>
+        <ul class="space-y-2.5 text-sm text-ivory/60">
+          <li><button data-nav="about" class="hover:text-gold transition-colors">Our Story</button></li>
+          <li class="flex items-start gap-2"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 shrink-0 gold-text"></i><span>Hathras, Uttar Pradesh</span></li>
+          <li class="flex items-start gap-2"><i data-lucide="phone" class="w-4 h-4 mt-0.5 shrink-0 gold-text"></i><span>+91 90124 80399</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-xs tracking-[0.2em] uppercase gold-text mb-4">Order Directly</div>
+        <p class="text-sm text-ivory/60 mb-4">No payment gateway needed — build your bag and confirm instantly on WhatsApp.</p>
+        <a href="https://wa.me/919012480399" target="_blank" rel="noopener" class="inline-flex items-center gap-2 btn-outline px-5 py-2.5 text-xs tracking-[0.15em] uppercase">
+          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.86.5 3.687 1.45 5.284L2 22l4.868-1.42a10 10 0 004.136.947h.004c5.518 0 10.004-4.486 10.004-10.005C21.012 6.486 16.527 2 12.004 2zm0 18.302h-.003a8.28 8.28 0 01-3.938-1.008l-.28-.166-2.888.84.842-2.816-.184-.29a8.26 8.26 0 01-1.267-4.858c.002-4.573 3.727-8.297 8.323-8.297a8.267 8.267 0 015.87 2.435 8.246 8.246 0 012.436 5.869c-.002 4.574-3.727 8.291-8.211 8.291z"/></svg>
+          WhatsApp Us
+        </a>
+      </div>
+    </div>
+    <div class="border-t border-white/5">
+      <div class="max-w-7xl mx-auto px-6 md:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-2 text-[11px] tracking-wide text-ivory/35">
+        <span>© 2026 VMM Collection, Hathras. All rights reserved.</span>
+        <button data-nav="admin" class="text-ivory/20 hover:text-gold/60 transition-colors">Admin</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- CART DRAWER -->
+<div id="cart-overlay" class="drawer-overlay fixed inset-0 bg-black/70 z-50"></div>
+<aside id="cart-drawer" class="drawer-panel fixed top-0 right-0 h-full w-full sm:w-[420px] bg-charcoal z-50 flex flex-col border-l border-white/10">
+  <div class="flex items-center justify-between px-6 h-[72px] border-b border-white/5 shrink-0">
+    <h3 class="font-display text-2xl tracking-wide">Your Bag</h3>
+    <button id="cart-close-btn" class="p-1 text-ivory/70 hover:text-gold"><i data-lucide="x" class="w-5 h-5"></i></button>
+  </div>
+  <div id="cart-items-container" class="flex-1 overflow-y-auto px-6 py-5 space-y-5"></div>
+  <div id="cart-summary" class="border-t border-white/10 px-6 py-6 space-y-3 shrink-0"></div>
+</aside>
+
+<!-- CHECKOUT MODAL -->
+<div id="checkout-overlay" class="modal-overlay fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
+  <div id="checkout-card" class="modal-card bg-charcoal border border-white/10 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div id="checkout-content"></div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+<script>
+/* =========================================================================
+   VMM COLLECTION — SPA CORE
+   ========================================================================= */
+
+/* ---------- 1. CONFIG ---------- */
+const SUPABASE_URL = "https://aboqbtesekbapusrwtvr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFib3FidGVzZWtiYXB1c3J3dHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNjUyMTcsImV4cCI6MjA5OTk0MTIxN30.8y2eA0MvEU_OGbr_UAOgyLPUFC5-bSRCMMNkxGF0VOg";
+const WHATSAPP_NUMBER = "+91 76680 80180";
+const GST_RATE = 0.05;
+const STORAGE_BUCKET = "product-images";
+const ADMIN_PASSWORD = "Prashant@9520@"; // change this to whatever password you want the shop owner to use
+
+/* ---------- 2. RESILIENT SUPABASE INITIALIZATION ---------- */
+let supabaseClient = null;
+let USING_MOCK_DATA = false;
+
+try {
+  const placeholdersLeft =
+    !SUPABASE_URL || !SUPABASE_ANON_KEY ||
+    SUPABASE_URL.indexOf("YOUR_SUPABASE") !== -1 ||
+    SUPABASE_ANON_KEY.indexOf("YOUR_SUPABASE") !== -1;
+
+  if (placeholdersLeft) {
+    throw new Error("Supabase placeholder keys detected.");
+  }
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (err) {
+  console.warn(
+    "%c[VMM Collection] Supabase not configured — running in local mock-data mode.\n" +
+    "Replace SUPABASE_URL and SUPABASE_ANON_KEY at the top of index.html and create a 'products' table to go live.\n" +
+    "Reason: " + err.message,
+    "color:#D4AF37;font-weight:bold;"
+  );
+  USING_MOCK_DATA = true;
+}
+
+/* ---------- 3. MOCK PRODUCT DATA (fallback) ---------- */
+let MOCK_PRODUCTS = [
+  {
+    id: "m1", title: "Onyx Tailored Blazer", price: 4599, category: "Men",
+    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=900&q=80",
+    description: "A sharply tailored single-breasted blazer in deep charcoal wool-blend. Structured shoulders, satin lapel facing, finished with horn-effect buttons.",
+    created_at: "2026-07-15T10:00:00Z"
+  },
+  {
+    id: "m2", title: "Ivory Silk Kurta", price: 2899, category: "Men",
+    image: "https://images.unsplash.com/photo-1622470953794-aa9c70b0fb9d?w=900&q=80",
+    description: "Hand-finished silk-blend kurta in ivory with subtle self-thread embroidery on the placket. Breathable, festive-ready, cut for a modern straight fit.",
+    created_at: "2026-07-14T10:00:00Z"
+  },
+  {
+    id: "w1", title: "Champagne Georgette Saree", price: 5299, category: "Women",
+    image: "https://images.unsplash.com/photo-1610189844258-b1e5c8f0b3d1?w=900&q=80",
+    description: "Flowing georgette saree in champagne gold with a hand-finished zari border. Comes with an unstitched matching blouse piece.",
+    created_at: "2026-07-16T10:00:00Z"
+  },
+  {
+    id: "w2", title: "Velvet Emerald Anarkali", price: 6199, category: "Women",
+    image: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=900&q=80",
+    description: "Floor-length velvet Anarkali in emerald with gota-patti work at the yoke. Fully lined, paired with matching dupatta.",
+    created_at: "2026-07-13T10:00:00Z"
+  },
+  {
+    id: "w3", title: "Rose Chiffon Co-ord Set", price: 3399, category: "Women",
+    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=80",
+    description: "Lightweight chiffon co-ord in dusted rose — relaxed shirt and flowing palazzo, perfect for evening soirées.",
+    created_at: "2026-07-12T10:00:00Z"
+  },
+  {
+    id: "a1", title: "Gold-Trim Leather Belt", price: 1199, category: "Accessories",
+    image: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=900&q=80",
+    description: "Genuine leather belt in deep black with a brushed gold-tone buckle. A quiet finishing touch for tailored fits.",
+    created_at: "2026-07-11T10:00:00Z"
+  },
+  {
+    id: "a2", title: "Statement Kundan Choker", price: 1899, category: "Accessories",
+    image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=900&q=80",
+    description: "Handcrafted kundan choker set with pearl drops. The finishing piece for festive and bridal ensembles.",
+    created_at: "2026-07-17T10:00:00Z"
+  },
+  {
+    id: "a3", title: "Hathras Craft Leather Loafers", price: 2299, category: "Accessories",
+    image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=900&q=80",
+    description: "Locally crafted genuine leather loafers with a supple sole and hand-stitched apron toe.",
+    created_at: "2026-07-10T10:00:00Z"
+  }
+];
+
+/* ---------- 4. APP STATE ---------- */
+const state = {
+  products: [],
+  cart: [],           // { productId, title, price, image, size, qty }
+  wishlist: new Set(),
+  currentView: "home",
+  currentCategory: "All",
+  currentProductId: null,
+  checkoutStep: 1,
+  checkoutData: { name: "", address: "", phone: "" },
+  isAdminUnlocked: false
+};
+
+/* ---------- 5. DATA LAYER ---------- */
+async function fetchProducts() {
+  if (USING_MOCK_DATA || !supabaseClient) {
+    return [...MOCK_PRODUCTS].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+  try {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error("[VMM Collection] fetchProducts failed, falling back to mock data:", err);
+    return [...MOCK_PRODUCTS].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+}
+
+async function insertProduct(product) {
+  if (USING_MOCK_DATA || !supabaseClient) {
+    const newProduct = {
+      id: "local-" + Date.now(),
+      created_at: new Date().toISOString(),
+      ...product
+    };
+    MOCK_PRODUCTS.unshift(newProduct);
+    return { success: true, data: newProduct };
+  }
+  try {
+    const { data, error } = await supabaseClient.from("products").insert([product]).select();
+    if (error) throw error;
+    return { success: true, data: data ? data[0] : null };
+  } catch (err) {
+    console.error("[VMM Collection] insertProduct failed:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function deleteProductById(id) {
+  if (USING_MOCK_DATA || !supabaseClient) {
+    MOCK_PRODUCTS = MOCK_PRODUCTS.filter(p => String(p.id) !== String(id));
+    return { success: true };
+  }
+  try {
+    const { error } = await supabaseClient.from("products").delete().eq("id", id);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error("[VMM Collection] deleteProductById failed:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/* ---------- 6. UTILITIES ---------- */
+function formatINR(amount) {
+  return "₹" + Number(amount).toLocaleString("en-IN");
+}
+
+function refreshIcons() {
+  if (window.lucide) lucide.createIcons();
+}
+
+function showToast(message, icon) {
+  const container = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = "toast pointer-events-auto bg-charcoal border border-gold/40 text-ivory text-sm px-5 py-3 flex items-center gap-2 shadow-2xl";
+  el.innerHTML = `<i data-lucide="${icon || 'check-circle'}" class="w-4 h-4 gold-text shrink-0"></i><span>${message}</span>`;
+  container.appendChild(el);
+  refreshIcons();
+  setTimeout(() => el.remove(), 2800);
+}
+
+function findProduct(id) {
+  return state.products.find(p => String(p.id) === String(id));
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------- 7. CART LOGIC ---------- */
+function addToCart(product, size, qty) {
+  size = size || "M";
+  qty = qty || 1;
+  const existing = state.cart.find(i => i.productId === product.id && i.size === size);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    state.cart.push({
+      productId: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      size: size,
+      qty: qty
+    });
+  }
+  updateCartBadge(true);
+  showToast(`${product.title} added to your bag`, "shopping-bag");
+  renderCartDrawer();
+}
+
+function updateCartQty(index, delta) {
+  const item = state.cart[index];
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) state.cart.splice(index, 1);
+  updateCartBadge();
+  renderCartDrawer();
+}
+
+function removeCartItem(index) {
+  state.cart.splice(index, 1);
+  updateCartBadge();
+  renderCartDrawer();
+}
+
+function cartSubtotal() {
+  return state.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+}
+
+function cartCount() {
+  return state.cart.reduce((sum, i) => sum + i.qty, 0);
+}
+
+function updateCartBadge(pulse) {
+  const badge = document.getElementById("cart-badge");
+  const count = cartCount();
+  badge.textContent = count;
+  badge.classList.toggle("hidden", count === 0);
+  badge.classList.toggle("flex", count > 0);
+  if (pulse) {
+    badge.classList.remove("badge-pulse");
+    void badge.offsetWidth;
+    badge.classList.add("badge-pulse");
+  }
+}
+
+/* ---------- 8. WISHLIST LOGIC ---------- */
+function toggleWishlist(productId) {
+  if (state.wishlist.has(productId)) {
+    state.wishlist.delete(productId);
+    showToast("Removed from wishlist", "heart");
+  } else {
+    state.wishlist.add(productId);
+    showToast("Added to wishlist", "heart");
+  }
+  updateWishlistBadge(true);
+  if (state.currentView === "shop") renderShopView();
+  if (state.currentView === "product") renderProductView();
+}
+
+function updateWishlistBadge(pulse) {
+  const badge = document.getElementById("wishlist-badge");
+  const count = state.wishlist.size;
+  badge.textContent = count;
+  badge.classList.toggle("hidden", count === 0);
+  badge.classList.toggle("flex", count > 0);
+  if (pulse) {
+    badge.classList.remove("badge-pulse");
+    void badge.offsetWidth;
+    badge.classList.add("badge-pulse");
+  }
+}
+
+/* ---------- 9. ROUTER ---------- */
+function navigate(viewName, params) {
+  params = params || {};
+  state.currentView = viewName;
+  if (params.category) state.currentCategory = params.category;
+  if (params.productId) state.currentProductId = params.productId;
+
+  let hash = "#" + viewName;
+  if (viewName === "product" && params.productId) hash += "/" + params.productId;
+  history.pushState({ view: viewName, params }, "", hash);
+
+  render();
+  closeMobileMenu();
+  closeCartDrawer();
+  scrollToTop();
+}
+
+function render() {
+  switch (state.currentView) {
+    case "home": renderHomeView(); break;
+    case "shop": renderShopView(); break;
+    case "product": renderProductView(); break;
+    case "about": renderAboutView(); break;
+    case "admin": state.isAdminUnlocked ? renderAdminView() : renderAdminLoginView(); break;
+    default: renderHomeView();
+  }
+  refreshIcons();
+  updateActiveNavLinks();
+}
+
+function updateActiveNavLinks() {
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-nav") === state.currentView);
+  });
+}
+
+/* ---------- 10. NAVBAR / MOBILE MENU / DRAWER TOGGLES ---------- */
+function closeMobileMenu() {
+  document.getElementById("mobile-menu").classList.add("hidden");
+}
+function toggleMobileMenu() {
+  document.getElementById("mobile-menu").classList.toggle("hidden");
+}
+
+function openCartDrawer() {
+  renderCartDrawer();
+  document.getElementById("cart-overlay").classList.add("open");
+  document.getElementById("cart-drawer").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeCartDrawer() {
+  document.getElementById("cart-overlay").classList.remove("open");
+  document.getElementById("cart-drawer").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function openCheckout() {
+  if (state.cart.length === 0) {
+    showToast("Your bag is empty", "alert-circle");
+    return;
+  }
+  state.checkoutStep = 1;
+  document.getElementById("checkout-overlay").classList.add("open");
+  renderCheckoutModal();
+  document.body.style.overflow = "hidden";
+}
+function closeCheckout() {
+  document.getElementById("checkout-overlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+/* ---------- 11. HOME VIEW ---------- */
+function renderHomeView() {
+  const newArrivals = [...state.products].slice(0, 8);
+
+  document.getElementById("app-view").innerHTML = `
+    <!-- HERO -->
+    <section class="relative h-[92vh] min-h-[560px] flex items-end overflow-hidden">
+      <div class="absolute inset-0">
+        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1800&q=80"
+             class="w-full h-full object-cover animate-kenburns" alt="VMM Collection haute couture" />
+        <div class="absolute inset-0 bg-gradient-to-t from-velvet via-velvet/70 to-velvet/20"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-velvet/60 via-transparent to-transparent"></div>
+      </div>
+
+      <div class="relative z-10 max-w-7xl mx-auto w-full px-6 md:px-8 pb-16 md:pb-24">
+        <div class="animate-fadeUp">
+          <div class="flex items-center gap-3 mb-5">
+            <span class="gold-line w-10"></span>
+            <span class="text-[11px] tracking-widest2 gold-text uppercase">Hathras's Own</span>
+          </div>
+          <h1 class="hero-title font-display italic text-[4.4rem] md:text-[7rem] leading-[0.95] max-w-3xl">
+            Haute Couture<br/><span class="not-italic gold-text">2026</span>
+          </h1>
+          <p class="text-ivory/60 max-w-md mt-6 text-[15px] leading-relaxed">
+            A curated wardrobe of tailored menswear, festive womenswear and finishing accessories —
+            handpicked in-house, priced fairly, delivered straight to your door.
+          </p>
+          <div class="flex flex-wrap items-center gap-4 mt-9">
+            <button data-nav="shop" class="btn-gold px-8 py-3.5 text-xs uppercase tracking-widest2">Shop the Edit</button>
+            <button data-nav="about" class="btn-outline px-8 py-3.5 text-xs uppercase tracking-widest2">Visit the Boutique</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="absolute bottom-8 right-8 hidden md:flex items-center gap-2 text-ivory/40 text-[11px] tracking-[0.2em] uppercase z-10">
+        <span>Scroll</span>
+        <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+      </div>
+    </section>
+
+    <!-- MARQUEE STRIP -->
+    <div class="border-y border-white/5 py-3.5 overflow-hidden bg-charcoal/60">
+      <div class="flex whitespace-nowrap animate-marquee">
+        ${Array(2).fill(`
+          <div class="flex items-center gap-10 px-5 text-[11px] tracking-[0.25em] uppercase text-ivory/40">
+            <span>Fixed-Price Boutique</span><span class="gold-text">✦</span>
+            <span>New Arrivals Weekly</span><span class="gold-text">✦</span>
+            <span>Order on WhatsApp</span><span class="gold-text">✦</span>
+            <span>Made &amp; Curated in Hathras</span><span class="gold-text">✦</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- NEW ARRIVALS -->
+    <section class="max-w-7xl mx-auto px-6 md:px-8 py-20 md:py-28">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="gold-line w-8"></span>
+            <span class="text-[11px] tracking-widest2 gold-text uppercase">Fresh In</span>
+          </div>
+          <h2 class="font-display text-4xl md:text-5xl">New Arrivals</h2>
+        </div>
+        <button data-nav="shop" class="hidden md:inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase text-ivory/60 hover:text-gold transition-colors">
+          View All <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <div id="new-arrivals-carousel" class="flex gap-5 overflow-x-auto no-scrollbar snap-x-mandatory pb-4">
+        ${newArrivals.map(p => productCardHTML(p, "w-[240px] md:w-[280px] shrink-0 snap-center")).join("")}
+      </div>
+    </section>
+
+    <!-- CATEGORY BANNERS -->
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-20 md:pb-28 grid grid-cols-1 md:grid-cols-3 gap-5">
+      ${categoryBannerHTML("Men", "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&q=80")}
+      ${categoryBannerHTML("Women", "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800&q=80")}
+      ${categoryBannerHTML("Accessories", "https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800&q=80")}
+    </section>
+
+    <!-- ABOUT TEASER -->
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-24 md:pb-32 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <div>
+        <img src="assets/about-storefront.jpg" alt="VMM Collection storefront in Hathras" class="w-full aspect-[4/5] object-cover" loading="lazy" />
+      </div>
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <span class="gold-line w-8"></span>
+          <span class="text-[11px] tracking-widest2 gold-text uppercase">Our Boutique</span>
+        </div>
+        <h2 class="font-display text-4xl md:text-5xl mb-5">Rooted in Hathras,<br/>styled for anywhere.</h2>
+        <p class="text-ivory/55 text-[15px] leading-relaxed max-w-md mb-8">
+          Every piece in this shop has first stood on our own shop floor. Two levels of hand-picked
+          apparel, footwear and accessories — and a fixed-price promise, always.
+        </p>
+        <button data-nav="about" class="btn-outline px-8 py-3.5 text-xs uppercase tracking-widest2">Our Story</button>
+      </div>
+    </section>
+  `;
+
+  document.getElementById("new-arrivals-carousel");
+}
+
+function categoryBannerHTML(cat, img) {
+  return `
+    <button data-nav="shop" data-cat="${cat}" class="group relative h-[380px] overflow-hidden block text-left">
+      <img src="${img}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${cat} collection" loading="lazy" />
+      <div class="absolute inset-0 bg-gradient-to-t from-velvet via-velvet/20 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-6 flex items-center justify-between">
+        <span class="font-display text-3xl">${cat}</span>
+        <span class="w-9 h-9 rounded-full border border-gold/50 flex items-center justify-center group-hover:bg-gold group-hover:text-velvet transition-all">
+          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </span>
+      </div>
+    </button>
+  `;
+}
+
+/* ---------- 12. PRODUCT CARD (shared) ---------- */
+function productCardHTML(p, extraClasses) {
+  const wished = state.wishlist.has(p.id);
+  return `
+    <div class="product-card group ${extraClasses || ''}">
+      <div class="relative aspect-[3/4] overflow-hidden bg-charcoal cursor-pointer" data-nav="product" data-product-id="${p.id}">
+        <img src="${p.image}" alt="${p.title}" class="card-img w-full h-full object-cover" loading="lazy" />
+        <button class="wishlist-toggle absolute top-3 right-3 w-9 h-9 rounded-full bg-velvet/70 backdrop-blur flex items-center justify-center border border-white/10 hover:border-gold transition-colors" data-product-id="${p.id}">
+          <i data-lucide="heart" class="w-4 h-4 ${wished ? 'fill-current gold-text' : 'text-ivory/80'}"></i>
+        </button>
+        <div class="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <button class="quick-add-btn w-full btn-gold py-3 text-[11px] uppercase tracking-widest2" data-product-id="${p.id}">
+            Quick Add
+          </button>
+        </div>
+      </div>
+      <div class="pt-3.5 px-0.5 cursor-pointer" data-nav="product" data-product-id="${p.id}">
+        <div class="text-[10px] tracking-[0.2em] uppercase text-ivory/40 mb-1">${p.category}</div>
+        <div class="text-[15px] text-ivory/95 leading-snug">${p.title}</div>
+        <div class="gold-text text-[15px] mt-1">${formatINR(p.price)}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 13. SHOP VIEW ---------- */
+function renderShopView() {
+  const categories = ["All", "Men", "Women", "Accessories", "New Drops"];
+  let filtered = state.products;
+  if (state.currentCategory === "New Drops") {
+    filtered = [...state.products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
+  } else if (state.currentCategory !== "All") {
+    filtered = state.products.filter(p => p.category === state.currentCategory);
+  }
+
+  document.getElementById("app-view").innerHTML = `
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-8">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="gold-line w-8"></span>
+        <span class="text-[11px] tracking-widest2 gold-text uppercase">The Full Edit</span>
+      </div>
+      <h1 class="font-display text-5xl md:text-6xl mb-8">Curated Shop</h1>
+
+      <div class="flex flex-wrap gap-3 mb-4" id="category-pills">
+        ${categories.map(c => `
+          <button class="cat-pill ${c === state.currentCategory ? 'active' : ''} px-5 py-2.5 text-[11px] tracking-[0.15em] uppercase" data-cat-filter="${c}">
+            ${c}
+          </button>
+        `).join("")}
+      </div>
+      <div class="text-ivory/40 text-xs mb-10">${filtered.length} piece${filtered.length === 1 ? '' : 's'}</div>
+
+      <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+        ${filtered.length
+          ? filtered.map(p => productCardHTML(p)).join("")
+          : `<div class="col-span-full text-center py-20 text-ivory/40">
+               <i data-lucide="package-search" class="w-10 h-10 mx-auto mb-4 gold-text"></i>
+               No pieces in this category yet — check back soon.
+             </div>`
+        }
+      </div>
+    </section>
+  `;
+}
+
+/* ---------- 14. PRODUCT DETAIL VIEW ---------- */
+let selectedSize = "M";
+let selectedQty = 1;
+let selectedColor = 0;
+let activeTab = "description";
+
+function renderProductView() {
+  const p = findProduct(state.currentProductId);
+  if (!p) {
+    document.getElementById("app-view").innerHTML = `
+      <div class="max-w-7xl mx-auto px-6 py-32 text-center">
+        <p class="text-ivory/50 mb-6">This piece is no longer available.</p>
+        <button data-nav="shop" class="btn-gold px-8 py-3 text-xs uppercase tracking-widest2">Back to Shop</button>
+      </div>`;
+    return;
+  }
+  selectedSize = "M"; selectedQty = 1; selectedColor = 0; activeTab = "description";
+  const wished = state.wishlist.has(p.id);
+  const colors = [
+    { name: "As Shown", hex: "#D4AF37" },
+    { name: "Onyx", hex: "#1a1a1a" },
+    { name: "Ivory", hex: "#f2ede4" }
+  ];
+  const related = state.products.filter(x => x.category === p.category && x.id !== p.id).slice(0, 4);
+
+  document.getElementById("app-view").innerHTML = `
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pt-10 pb-6">
+      <button data-nav="shop" class="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase text-ivory/50 hover:text-gold transition-colors">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Shop
+      </button>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-24 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+      <div class="relative aspect-[4/5] overflow-hidden bg-charcoal">
+        <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover" />
+        <button id="pd-wishlist-btn" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-velvet/70 backdrop-blur flex items-center justify-center border border-white/10 hover:border-gold transition-colors">
+          <i data-lucide="heart" class="w-[18px] h-[18px] ${wished ? 'fill-current gold-text' : 'text-ivory/80'}"></i>
+        </button>
+      </div>
+
+      <div class="animate-fadeUp">
+        <div class="text-[11px] tracking-[0.2em] uppercase gold-text mb-3">${p.category}</div>
+        <h1 class="font-display text-4xl md:text-5xl mb-4 leading-tight">${p.title}</h1>
+        <div class="text-2xl gold-text mb-8">${formatINR(p.price)}</div>
+
+        <div class="mb-7">
+          <div class="text-xs tracking-[0.15em] uppercase text-ivory/50 mb-3">Color — <span id="color-label" class="text-ivory/80">${colors[0].name}</span></div>
+          <div class="flex gap-3" id="color-selector">
+            ${colors.map((c, i) => `
+              <button class="color-swatch w-8 h-8 rounded-full border-2 ${i === 0 ? 'border-gold' : 'border-white/15'}" data-color-index="${i}" style="background:${c.hex}"></button>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <div class="text-xs tracking-[0.15em] uppercase text-ivory/50 mb-3">Size</div>
+          <div class="flex gap-3" id="size-selector">
+            ${["S", "M", "L", "XL"].map(s => `
+              <button class="size-chip ${s === 'M' ? 'active' : ''} w-12 h-12 text-sm" data-size="${s}">${s}</button>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="mb-9 flex items-center gap-5">
+          <div class="text-xs tracking-[0.15em] uppercase text-ivory/50">Qty</div>
+          <div class="flex items-center border border-white/15">
+            <button id="qty-minus" class="w-10 h-10 flex items-center justify-center hover:text-gold"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+            <span id="qty-value" class="w-10 text-center text-sm">1</span>
+            <button id="qty-plus" class="w-10 h-10 flex items-center justify-center hover:text-gold"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <button id="add-to-bag-btn" class="btn-gold w-full py-4 text-xs uppercase tracking-widest2 mb-10">
+          Add to Bag — ${formatINR(p.price)}
+        </button>
+
+        <div class="border-t border-white/10">
+          <div class="flex gap-8 border-b border-white/10">
+            <button class="tab-btn active py-4 text-xs tracking-[0.15em] uppercase" data-tab="description">Description</button>
+            <button class="tab-btn py-4 text-xs tracking-[0.15em] uppercase" data-tab="details">Details</button>
+            <button class="tab-btn py-4 text-xs tracking-[0.15em] uppercase" data-tab="delivery">Delivery</button>
+          </div>
+          <div id="tab-content" class="py-6 text-ivory/60 text-sm leading-relaxed">
+            ${p.description}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    ${related.length ? `
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-24">
+      <h3 class="font-display text-3xl mb-8">You May Also Like</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+        ${related.map(rp => productCardHTML(rp)).join("")}
+      </div>
+    </section>` : ""}
+  `;
+
+  refreshIcons();
+
+  // wire up product page interactions
+  document.getElementById("pd-wishlist-btn").addEventListener("click", () => toggleWishlist(p.id));
+
+  document.querySelectorAll(".size-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".size-chip").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedSize = btn.getAttribute("data-size");
+    });
+  });
+
+  document.querySelectorAll(".color-swatch").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".color-swatch").forEach(b => b.classList.remove("border-gold"));
+      document.querySelectorAll(".color-swatch").forEach(b => b.classList.add("border-white/15"));
+      btn.classList.remove("border-white/15");
+      btn.classList.add("border-gold");
+      selectedColor = i;
+      document.getElementById("color-label").textContent = colors[i].name;
+    });
+  });
+
+  document.getElementById("qty-minus").addEventListener("click", () => {
+    selectedQty = Math.max(1, selectedQty - 1);
+    document.getElementById("qty-value").textContent = selectedQty;
+  });
+  document.getElementById("qty-plus").addEventListener("click", () => {
+    selectedQty = Math.min(10, selectedQty + 1);
+    document.getElementById("qty-value").textContent = selectedQty;
+  });
+
+  const tabContentMap = {
+    description: p.description,
+    details: "Fabric &amp; Care: Dry clean recommended. Colours may vary slightly from screen due to studio lighting. Model shots are for reference — every piece is quality-checked in-store before dispatch.",
+    delivery: "Delivery across Hathras within 24–48 hours. Outstation orders ship in 3–6 business days. Order is confirmed only after WhatsApp confirmation — no advance payment required for local delivery."
+  };
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-content").innerHTML = tabContentMap[btn.getAttribute("data-tab")];
+    });
+  });
+
+  document.getElementById("add-to-bag-btn").addEventListener("click", () => {
+    addToCart(p, selectedSize, selectedQty);
+  });
+}
+
+/* ---------- 15. ABOUT VIEW (real boutique imagery) ---------- */
+function renderAboutView() {
+  document.getElementById("app-view").innerHTML = `
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-6 text-center">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <span class="gold-line w-8"></span>
+        <span class="text-[11px] tracking-widest2 gold-text uppercase">Our Story</span>
+        <span class="gold-line w-8"></span>
+      </div>
+      <h1 class="font-display text-5xl md:text-6xl">Inside VMM Collection</h1>
+      <p class="text-ivory/50 max-w-xl mx-auto mt-5 text-[15px] leading-relaxed">
+        A family-run boutique on the outskirts of Hathras, built floor by floor on one simple
+        promise — good pieces, honestly priced, for the whole family.
+      </p>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 md:px-8 py-14 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+      <div class="md:row-span-2">
+        <img src="assets/about-storefront.jpg" alt="VMM Collection storefront" class="w-full h-full object-cover aspect-[4/5] md:aspect-auto" loading="lazy" />
+      </div>
+      <img src="assets/about-interior-clothes.jpg" alt="Apparel floor at VMM Collection" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+      <img src="assets/about-interior-shoes.jpg" alt="Footwear floor at VMM Collection" class="w-full aspect-[4/3] object-cover" loading="lazy" />
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <img src="assets/about-owner.jpg" alt="VMM Collection welcome counter" class="w-full aspect-[4/5] object-cover order-2 md:order-1" loading="lazy" />
+      <div class="order-1 md:order-2">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="gold-line w-8"></span>
+          <span class="text-[11px] tracking-widest2 gold-text uppercase">One Fixed Price, Always</span>
+        </div>
+        <h2 class="font-display text-4xl mb-5">No haggling. No hidden mark-up.</h2>
+        <p class="text-ivory/55 text-[15px] leading-relaxed mb-6">
+          Every tag at VMM Collection carries one honest price — what you see is what you pay,
+          in-store or on WhatsApp. It's a small promise, but it's the one our regulars keep coming back for.
+        </p>
+        <div class="space-y-4">
+          <div class="flex items-start gap-3">
+            <i data-lucide="map-pin" class="w-4 h-4 gold-text mt-1 shrink-0"></i>
+            <div><div class="text-sm">Visit Us</div><div class="text-ivory/45 text-sm">Hathras, Uttar Pradesh</div></div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="phone" class="w-4 h-4 gold-text mt-1 shrink-0"></i>
+            <div><div class="text-sm">Call or WhatsApp</div><div class="text-ivory/45 text-sm">+91 90124 80399</div></div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="clock" class="w-4 h-4 gold-text mt-1 shrink-0"></i>
+            <div><div class="text-sm">Open Daily</div><div class="text-ivory/45 text-sm">10:00 AM – 9:00 PM</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-24 text-center">
+      <button data-nav="shop" class="btn-gold px-10 py-4 text-xs uppercase tracking-widest2">Shop the Collection</button>
+    </section>
+  `;
+  refreshIcons();
+}
+
+/* ---------- 16. CART DRAWER RENDER ---------- */
+function renderCartDrawer() {
+  const container = document.getElementById("cart-items-container");
+  const summary = document.getElementById("cart-summary");
+
+  if (state.cart.length === 0) {
+    container.innerHTML = `
+      <div class="h-full flex flex-col items-center justify-center text-center text-ivory/40 py-20">
+        <i data-lucide="shopping-bag" class="w-10 h-10 mb-4 gold-text"></i>
+        <p class="text-sm">Your bag is empty.</p>
+      </div>`;
+    summary.innerHTML = "";
+    refreshIcons();
+    return;
+  }
+
+  container.innerHTML = state.cart.map((item, index) => `
+    <div class="flex gap-4 animate-fadeIn">
+      <div class="w-20 h-24 bg-charcoal overflow-hidden shrink-0">
+        <img src="${item.image}" class="w-full h-full object-cover" alt="${item.title}" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <div class="text-sm leading-snug truncate pr-2">${item.title}</div>
+          <button class="cart-remove-btn text-ivory/30 hover:text-gold shrink-0" data-index="${index}">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="text-ivory/40 text-xs mt-1">Size: ${item.size}</div>
+        <div class="flex items-center justify-between mt-3">
+          <div class="flex items-center border border-white/15">
+            <button class="cart-qty-minus w-7 h-7 flex items-center justify-center hover:text-gold" data-index="${index}"><i data-lucide="minus" class="w-3 h-3"></i></button>
+            <span class="w-7 text-center text-xs">${item.qty}</span>
+            <button class="cart-qty-plus w-7 h-7 flex items-center justify-center hover:text-gold" data-index="${index}"><i data-lucide="plus" class="w-3 h-3"></i></button>
+          </div>
+          <div class="gold-text text-sm">${formatINR(item.price * item.qty)}</div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  const subtotal = cartSubtotal();
+  const gst = subtotal * GST_RATE;
+  const total = subtotal + gst;
+
+  summary.innerHTML = `
+    <div class="flex justify-between text-sm text-ivory/60">
+      <span>Subtotal</span><span>${formatINR(subtotal)}</span>
+    </div>
+    <div class="flex justify-between text-sm text-ivory/60">
+      <span>Taxes (5% GST)</span><span>${formatINR(gst)}</span>
+    </div>
+    <div class="flex justify-between text-base pt-2 border-t border-white/10">
+      <span>Total</span><span class="gold-text">${formatINR(total)}</span>
+    </div>
+    <button id="checkout-btn" class="btn-gold w-full py-4 text-xs uppercase tracking-widest2 mt-4">
+      Proceed to Checkout
+    </button>
+  `;
+
+  refreshIcons();
+
+  container.querySelectorAll(".cart-remove-btn").forEach(btn =>
+    btn.addEventListener("click", () => removeCartItem(parseInt(btn.getAttribute("data-index"))))
+  );
+  container.querySelectorAll(".cart-qty-minus").forEach(btn =>
+    btn.addEventListener("click", () => updateCartQty(parseInt(btn.getAttribute("data-index")), -1))
+  );
+  container.querySelectorAll(".cart-qty-plus").forEach(btn =>
+    btn.addEventListener("click", () => updateCartQty(parseInt(btn.getAttribute("data-index")), 1))
+  );
+  const checkoutBtn = document.getElementById("checkout-btn");
+  if (checkoutBtn) checkoutBtn.addEventListener("click", () => { closeCartDrawer(); openCheckout(); });
+}
+
+/* ---------- 17. CHECKOUT MODAL (multi-step + WhatsApp pipeline) ---------- */
+const Hathras_AREAS = [
+  "Agsouli Chouraha", "Center Point", "Marris Road", "Ramghat Road", "Dodhpur",
+  "Civil Lines", "Sasni Gate", "Quarsi", "Vishnupuri", "Anoop Shahar Road"
+];
+
+function renderCheckoutModal() {
+  const content = document.getElementById("checkout-content");
+  const subtotal = cartSubtotal();
+  const gst = subtotal * GST_RATE;
+  const total = subtotal + gst;
+
+  if (state.checkoutStep === 1) {
+    content.innerHTML = `
+      <div class="p-6 md:p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-2xl">Review Your Bag</h3>
+          <button id="checkout-close-1" class="text-ivory/50 hover:text-gold"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-4 max-h-[40vh] overflow-y-auto mb-6 pr-1">
+          ${state.cart.map(item => `
+            <div class="flex justify-between text-sm">
+              <span class="text-ivory/70">${item.qty} × ${item.title} <span class="text-ivory/35">(${item.size})</span></span>
+              <span>${formatINR(item.price * item.qty)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="border-t border-white/10 pt-4 space-y-2 mb-8">
+          <div class="flex justify-between text-sm text-ivory/60"><span>Subtotal</span><span>${formatINR(subtotal)}</span></div>
+          <div class="flex justify-between text-sm text-ivory/60"><span>Taxes (5%)</span><span>${formatINR(gst)}</span></div>
+          <div class="flex justify-between text-base"><span>Total</span><span class="gold-text">${formatINR(total)}</span></div>
+        </div>
+        <button id="checkout-next-1" class="btn-gold w-full py-4 text-xs uppercase tracking-widest2">Continue to Delivery Details</button>
+      </div>
+    `;
+    document.getElementById("checkout-close-1").addEventListener("click", closeCheckout);
+    document.getElementById("checkout-next-1").addEventListener("click", () => {
+      state.checkoutStep = 2;
+      renderCheckoutModal();
+    });
+  }
+
+  else if (state.checkoutStep === 2) {
+    content.innerHTML = `
+      <div class="p-6 md:p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-2xl">Delivery Details</h3>
+          <button id="checkout-close-2" class="text-ivory/50 hover:text-gold"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-4 mb-8">
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Full Name</label>
+            <input id="chk-name" type="text" class="input-luxe w-full px-4 py-3 text-sm" placeholder="e.g. Aisha Khan" value="${state.checkoutData.name}" />
+          </div>
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Delivery Address</label>
+            <input id="chk-address" list="Hathras-areas" type="text" class="input-luxe w-full px-4 py-3 text-sm" placeholder="House no., street, near landmark — e.g. Agsouli Chouraha" value="${state.checkoutData.address}" />
+            <datalist id="Hathras-areas">
+              ${Hathras_AREAS.map(a => `<option value="${a}">`).join("")}
+            </datalist>
+          </div>
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Phone Number</label>
+            <input id="chk-phone" type="tel" class="input-luxe w-full px-4 py-3 text-sm" placeholder="10-digit mobile number" value="${state.checkoutData.phone}" />
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button id="checkout-back-2" class="btn-outline flex-1 py-4 text-xs uppercase tracking-widest2">Back</button>
+          <button id="checkout-next-2" class="btn-gold flex-1 py-4 text-xs uppercase tracking-widest2">Review Order</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("checkout-close-2").addEventListener("click", closeCheckout);
+    document.getElementById("checkout-back-2").addEventListener("click", () => { state.checkoutStep = 1; renderCheckoutModal(); });
+    document.getElementById("checkout-next-2").addEventListener("click", () => {
+      const name = document.getElementById("chk-name").value.trim();
+      const address = document.getElementById("chk-address").value.trim();
+      const phone = document.getElementById("chk-phone").value.trim();
+      if (!name || !address || !phone) {
+        showToast("Please fill in all delivery details", "alert-circle");
+        return;
+      }
+      if (!/^[0-9]{10}$/.test(phone.replace(/\D/g, "").slice(-10))) {
+        showToast("Please enter a valid 10-digit phone number", "alert-circle");
+        return;
+      }
+      state.checkoutData = { name, address, phone };
+      state.checkoutStep = 3;
+      renderCheckoutModal();
+    });
+  }
+
+  else if (state.checkoutStep === 3) {
+    content.innerHTML = `
+      <div class="p-6 md:p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-2xl">Confirm &amp; Send</h3>
+          <button id="checkout-close-3" class="text-ivory/50 hover:text-gold"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="bg-velvet/60 border border-white/10 p-5 mb-6 space-y-1.5 text-sm text-ivory/70">
+          <div><span class="text-ivory/40">Name:</span> ${state.checkoutData.name}</div>
+          <div><span class="text-ivory/40">Address:</span> ${state.checkoutData.address}</div>
+          <div><span class="text-ivory/40">Phone:</span> ${state.checkoutData.phone}</div>
+        </div>
+        <div class="flex justify-between text-base mb-8">
+          <span>Final Payable</span><span class="gold-text">${formatINR(total)}</span>
+        </div>
+        <div class="flex gap-3">
+          <button id="checkout-back-3" class="btn-outline flex-1 py-4 text-xs uppercase tracking-widest2">Back</button>
+          <button id="checkout-send-btn" class="flex-[2] flex items-center justify-center gap-2 btn-gold py-4 text-xs uppercase tracking-widest2">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.004 2C6.486 2 2 6.486 2 12.004c0 1.86.5 3.687 1.45 5.284L2 22l4.868-1.42a10 10 0 004.136.947h.004c5.518 0 10.004-4.486 10.004-10.005C21.012 6.486 16.527 2 12.004 2zm0 18.302h-.003a8.28 8.28 0 01-3.938-1.008l-.28-.166-2.888.84.842-2.816-.184-.29a8.26 8.26 0 01-1.267-4.858c.002-4.573 3.727-8.297 8.323-8.297a8.267 8.267 0 015.87 2.435 8.246 8.246 0 012.436 5.869c-.002 4.574-3.727 8.291-8.211 8.291z"/></svg>
+            Place Order via WhatsApp
+          </button>
+        </div>
+      </div>
+    `;
+    document.getElementById("checkout-close-3").addEventListener("click", closeCheckout);
+    document.getElementById("checkout-back-3").addEventListener("click", () => { state.checkoutStep = 2; renderCheckoutModal(); });
+    document.getElementById("checkout-send-btn").addEventListener("click", sendWhatsAppOrder);
+  }
+
+  refreshIcons();
+}
+
+function sendWhatsAppOrder() {
+  const subtotal = cartSubtotal();
+  const gst = subtotal * GST_RATE;
+  const total = subtotal + gst;
+  const d = state.checkoutData;
+
+  let lines = "*🚨 NEW ORDER RECEIVED - VMM COLLECTION 🚨*\n";
+  lines += "*Customer Details:*\n";
+  lines += `- Name: ${d.name}\n`;
+  lines += `- Address: ${d.address}\n`;
+  lines += `- Phone: ${d.phone}\n\n`;
+  lines += "*Order Summary:*\n";
+  state.cart.forEach(item => {
+    lines += `- ${item.qty} x ${item.title} (Size: ${item.size}) - ${formatINR(item.price * item.qty)}\n`;
+  });
+  lines += "\n*Financial Breakdown:*\n";
+  lines += `- Subtotal: ${formatINR(subtotal)}\n`;
+  lines += `- Taxes (5%): ${formatINR(gst)}\n`;
+  lines += `- *Final Payable Amount: ${formatINR(total)}*`;
+
+  const encoded = encodeURIComponent(lines);
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, "_blank");
+
+  closeCheckout();
+  state.cart = [];
+  updateCartBadge();
+  showToast("Order sent! Confirm it on WhatsApp to finish.", "check-circle");
+  navigate("home");
+}
+
+/* ---------- 18. ADMIN VIEW ---------- */
+function renderAdminLoginView() {
+  document.getElementById("app-view").innerHTML = `
+    <section class="max-w-md mx-auto px-6 pt-24 pb-32 text-center">
+      <i data-lucide="lock" class="w-8 h-8 gold-text mx-auto mb-5"></i>
+      <h1 class="font-display text-4xl mb-3">Admin Access</h1>
+      <p class="text-ivory/45 text-sm mb-8">Enter the shop password to manage inventory.</p>
+      <div class="space-y-4 text-left">
+        <input id="admin-password-input" type="password" class="input-luxe w-full px-4 py-3.5 text-sm text-center tracking-widest" placeholder="Password" autofocus />
+        <button id="admin-login-btn" class="btn-gold w-full py-4 text-xs uppercase tracking-widest2">Unlock</button>
+      </div>
+    </section>
+  `;
+  refreshIcons();
+
+  const input = document.getElementById("admin-password-input");
+  const submit = () => {
+    if (input.value === ADMIN_PASSWORD) {
+      state.isAdminUnlocked = true;
+      renderAdminView();
+      refreshIcons();
+    } else {
+      showToast("Incorrect password", "alert-circle");
+      input.value = "";
+      input.focus();
+    }
+  };
+  document.getElementById("admin-login-btn").addEventListener("click", submit);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+}
+
+function renderAdminView() {
+  document.getElementById("app-view").innerHTML = `
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-8">
+      <div class="flex items-center justify-between mb-2 gap-3 flex-wrap">
+        <h1 class="font-display text-4xl md:text-5xl">Admin Control Panel</h1>
+        <div class="flex items-center gap-3">
+          ${USING_MOCK_DATA ? `<span class="text-[10px] tracking-[0.15em] uppercase border border-gold/40 text-gold px-3 py-1.5">Mock Mode</span>` : `<span class="text-[10px] tracking-[0.15em] uppercase border border-green-500/40 text-green-400 px-3 py-1.5">Live — Supabase</span>`}
+          <button id="admin-lock-btn" class="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase border border-white/15 hover:border-gold hover:text-gold px-3 py-1.5 transition-colors">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+          </button>
+        </div>
+      </div>
+      <p class="text-ivory/40 text-sm mb-10">Push new pieces live or retire items from the shop.</p>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 md:px-8 pb-24 grid grid-cols-1 lg:grid-cols-5 gap-10">
+      <div class="lg:col-span-2 border border-white/10 p-6 md:p-8 h-fit">
+        <h2 class="font-display text-2xl mb-6">Add New Product</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Product Photo</label>
+            <label for="admin-image-file" class="flex items-center gap-3 border border-dashed border-white/20 hover:border-gold cursor-pointer px-4 py-4 text-sm text-ivory/60 transition-colors">
+              <i data-lucide="camera" class="w-5 h-5 gold-text shrink-0"></i>
+              <span id="admin-image-file-label">Tap to click a photo or choose from gallery</span>
+            </label>
+            <input id="admin-image-file" type="file" accept="image/*" capture="environment" class="hidden" />
+            <div id="admin-image-preview-wrap" class="hidden mt-3">
+              <img id="admin-image-preview" class="w-24 h-28 object-cover border border-white/10" />
+            </div>
+            <button id="admin-toggle-url-btn" type="button" class="text-[11px] tracking-[0.1em] uppercase text-ivory/35 hover:text-gold mt-2 underline underline-offset-4">Or paste an image link instead</button>
+            <div id="admin-url-wrap" class="hidden mt-3">
+              <input id="admin-image" type="text" class="input-luxe w-full px-4 py-3 text-sm" placeholder="Paste image link (WhatsApp Web, Pinterest, hosting...)" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Product Title</label>
+            <input id="admin-title" type="text" class="input-luxe w-full px-4 py-3 text-sm" placeholder="e.g. Maroon Velvet Sherwani" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Price (₹)</label>
+              <input id="admin-price" type="number" min="0" class="input-luxe w-full px-4 py-3 text-sm" placeholder="2999" />
+            </div>
+            <div>
+              <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Category</label>
+              <select id="admin-category" class="input-luxe w-full px-4 py-3 text-sm">
+                <option value="Men">Men</option>
+                <option value="Women">Women</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] tracking-[0.15em] uppercase text-ivory/50 block mb-2">Description</label>
+            <textarea id="admin-description" rows="4" class="input-luxe w-full px-4 py-3 text-sm resize-none" placeholder="Fabric, fit, occasion..."></textarea>
+          </div>
+          <button id="admin-submit-btn" class="btn-gold w-full py-4 text-xs uppercase tracking-widest2 mt-2">Push Live to Shop</button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3">
+        <h2 class="font-display text-2xl mb-6">Active Inventory <span class="text-ivory/40 text-base">(${state.products.length})</span></h2>
+        <div id="admin-inventory-list" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          ${state.products.map(p => adminRowHTML(p)).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+  refreshIcons();
+
+  document.getElementById("admin-submit-btn").addEventListener("click", handleAdminSubmit);
+  document.querySelectorAll(".admin-delete-btn").forEach(btn =>
+    btn.addEventListener("click", () => handleAdminDelete(btn.getAttribute("data-product-id")))
+  );
+
+  document.getElementById("admin-image-file").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const label = document.getElementById("admin-image-file-label");
+    const previewWrap = document.getElementById("admin-image-preview-wrap");
+    const preview = document.getElementById("admin-image-preview");
+    if (!file) {
+      label.textContent = "Tap to click a photo or choose from gallery";
+      previewWrap.classList.add("hidden");
+      return;
+    }
+    label.textContent = file.name;
+    preview.src = URL.createObjectURL(file);
+    previewWrap.classList.remove("hidden");
+  });
+
+  document.getElementById("admin-toggle-url-btn").addEventListener("click", () => {
+    document.getElementById("admin-url-wrap").classList.toggle("hidden");
+  });
+
+  document.getElementById("admin-lock-btn").addEventListener("click", () => {
+    state.isAdminUnlocked = false;
+    navigate("home");
+  });
+}
+
+function adminRowHTML(p) {
+  return `
+    <div class="flex items-center gap-4 border border-white/10 p-3">
+      <img src="${p.image}" class="w-14 h-16 object-cover shrink-0 bg-charcoal" alt="${p.title}" />
+      <div class="flex-1 min-w-0">
+        <div class="text-sm truncate">${p.title}</div>
+        <div class="text-ivory/40 text-xs">${p.category} · ${formatINR(p.price)}</div>
+      </div>
+      <button class="admin-delete-btn shrink-0 w-9 h-9 flex items-center justify-center border border-white/10 hover:border-red-400 hover:text-red-400 transition-colors" data-product-id="${p.id}">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+  `;
+}
+
+async function uploadProductImageFile(file) {
+  if (USING_MOCK_DATA || !supabaseClient) {
+    // Mock mode: no real storage available, use a temporary local preview URL.
+    return { success: true, url: URL.createObjectURL(file) };
+  }
+  try {
+    const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, "-").toLowerCase();
+    const path = `${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from(STORAGE_BUCKET)
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    if (!data || !data.publicUrl) throw new Error("Could not resolve public URL for uploaded image.");
+    return { success: true, url: data.publicUrl };
+  } catch (err) {
+    console.error("[VMM Collection] uploadProductImageFile failed:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function handleAdminSubmit() {
+  const fileInput = document.getElementById("admin-image-file");
+  const urlInput = document.getElementById("admin-image");
+  const file = fileInput.files[0];
+  const pastedUrl = urlInput ? urlInput.value.trim() : "";
+  const title = document.getElementById("admin-title").value.trim();
+  const price = parseFloat(document.getElementById("admin-price").value);
+  const category = document.getElementById("admin-category").value;
+  const description = document.getElementById("admin-description").value.trim();
+
+  if ((!file && !pastedUrl) || !title || !price || !category) {
+    showToast("Please add a photo, title, price and category", "alert-circle");
+    return;
+  }
+
+  const btn = document.getElementById("admin-submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Uploading Photo...";
+
+  let image = pastedUrl;
+  if (file) {
+    const uploadResult = await uploadProductImageFile(file);
+    if (!uploadResult.success) {
+      btn.disabled = false;
+      btn.textContent = "Push Live to Shop";
+      showToast("Photo upload failed: " + (uploadResult.error || "unknown error"), "alert-circle");
+      return;
+    }
+    image = uploadResult.url;
+  }
+
+  btn.textContent = "Pushing Live...";
+  const result = await insertProduct({ title, price, image, category, description });
+
+  btn.disabled = false;
+  btn.textContent = "Push Live to Shop";
+
+  if (result.success) {
+    showToast("Product pushed live to the shop", "check-circle");
+    state.products = await fetchProducts();
+    renderAdminView();
+  } else {
+    showToast("Could not save product: " + (result.error || "unknown error"), "alert-circle");
+  }
+}
+
+async function handleAdminDelete(id) {
+  const result = await deleteProductById(id);
+  if (result.success) {
+    showToast("Product removed from shop", "trash-2");
+    state.products = await fetchProducts();
+    renderAdminView();
+  } else {
+    showToast("Could not delete product: " + (result.error || "unknown error"), "alert-circle");
+  }
+}
+
+/* ---------- 19. GLOBAL EVENT DELEGATION ---------- */
+document.addEventListener("click", (e) => {
+  const navBtn = e.target.closest("[data-nav]");
+  if (navBtn) {
+    const view = navBtn.getAttribute("data-nav");
+    const cat = navBtn.getAttribute("data-cat");
+    const productId = navBtn.getAttribute("data-product-id");
+    navigate(view, { category: cat || undefined, productId: productId || undefined });
+    return;
+  }
+
+  const catFilterBtn = e.target.closest("[data-cat-filter]");
+  if (catFilterBtn) {
+    state.currentCategory = catFilterBtn.getAttribute("data-cat-filter");
+    renderShopView();
+    refreshIcons();
+    return;
+  }
+
+  const wishBtn = e.target.closest(".wishlist-toggle");
+  if (wishBtn) {
+    e.stopPropagation();
+    toggleWishlist(wishBtn.getAttribute("data-product-id"));
+    return;
+  }
+
+  const quickAddBtn = e.target.closest(".quick-add-btn");
+  if (quickAddBtn) {
+    e.stopPropagation();
+    const p = findProduct(quickAddBtn.getAttribute("data-product-id"));
+    if (p) addToCart(p, "M", 1);
+    return;
+  }
+});
+
+document.getElementById("wishlist-btn").addEventListener("click", () => {
+  navigate("shop", { category: "All" });
+  showToast("Tap the heart on any piece to build your wishlist", "heart");
+});
+document.getElementById("cart-btn").addEventListener("click", openCartDrawer);
+document.getElementById("cart-close-btn").addEventListener("click", closeCartDrawer);
+document.getElementById("cart-overlay").addEventListener("click", closeCartDrawer);
+document.getElementById("checkout-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "checkout-overlay") closeCheckout();
+});
+document.getElementById("hamburger-btn").addEventListener("click", toggleMobileMenu);
+
+window.addEventListener("popstate", (e) => {
+  const hash = location.hash.replace("#", "");
+  if (hash.startsWith("product/")) {
+    state.currentView = "product";
+    state.currentProductId = hash.split("/")[1];
+  } else {
+    state.currentView = hash || "home";
+  }
+  render();
+});
+
+/* ---------- 20. INIT ---------- */
+async function init() {
+  refreshIcons();
+  state.products = await fetchProducts();
+
+  const hash = location.hash.replace("#", "");
+  if (hash.startsWith("product/")) {
+    state.currentView = "product";
+    state.currentProductId = hash.split("/")[1];
+  } else if (["home", "shop", "product", "about", "admin"].includes(hash)) {
+    state.currentView = hash;
+  } else {
+    state.currentView = "home";
+  }
+
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
